@@ -12,11 +12,12 @@ function sampleNoteCount(state: NativeSnapshot, folder: string) {
   if (!count) throw new Error('NOTES_COUNT_UNVERIFIED');
   return Number(count.replaceAll(',', ''));
 }
-export async function nativeWriteNote(input: NoteInput) {
+export async function nativeWriteNote(input: NoteInput, prepared: NativeSnapshot) {
   const profile = await nativeProfile();
+  const windowId = prepared.window!.id;
   let created = false;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const before = await snapshot('notes', profile.notesWindowId);
+    const before = await snapshot('notes', windowId);
     assertSampleFolder(before, profile.notesFolder);
     const priorCount = sampleNoteCount(before, profile.notesFolder);
     const toolbar = nodes(before).filter(node => node.role === 'toolbar');
@@ -25,7 +26,7 @@ export async function nativeWriteNote(input: NoteInput) {
     const target = one(nodes(temporary).filter(node => node.role === 'button' && node.name === '새로운 메모' && !node.states?.includes('disabled')));
     const scope = await scoped(target);
     const result = await nativeCli(['click', scope.tree.ref_id!]);
-    const after = await snapshot('notes', profile.notesWindowId);
+    const after = await snapshot('notes', windowId);
     assertSampleFolder(after, profile.notesFolder);
     const fields = nodes(after).filter(node => node.native_id?.value === 'Note Body Text View');
     if (sampleNoteCount(after, profile.notesFolder) === priorCount + 1 && fields.length === 1 && await value(fields[0]) === '') { created = true; break; }
@@ -33,7 +34,7 @@ export async function nativeWriteNote(input: NoteInput) {
     throw new Error('NOTES_CREATION_OUTCOME_UNCERTAIN: inspect before creating another note.');
   }
   if (!created) throw new Error('NEW_NOTE_NOT_VERIFIED');
-  const fresh = await snapshot('notes', profile.notesWindowId);
+  const fresh = await snapshot('notes', windowId);
   assertSampleFolder(fresh, profile.notesFolder);
   const body = one(nodes(fresh).filter(node => node.native_id?.value === 'Note Body Text View'));
   if (await value(body) !== '') throw new Error('EXISTING_NOTE_CONTENT: refusing to edit.');
@@ -42,10 +43,10 @@ export async function nativeWriteNote(input: NoteInput) {
   await nativeCli(['set-value', body.ref_id!, '--stdin'], text);
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) {
-    const after = await snapshot('notes', profile.notesWindowId);
+    const after = await snapshot('notes', windowId);
     assertSampleFolder(after, profile.notesFolder);
     const field = one(nodes(after).filter(node => node.native_id?.value === 'Note Body Text View'));
-    if (await value(field) === text) return { kind: 'note', title, verified: true, mode: 'live', bundleId: bundles.notes, transport: 'agent-desktop/headless', verification: 'ui-content-readback', windowId: profile.notesWindowId };
+    if (await value(field) === text) return { kind: 'note', title, verified: true, mode: 'live', bundleId: bundles.notes, transport: 'agent-desktop/headless', verification: 'ui-content-readback', windowId };
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   throw new Error('NOTES_CONTENT_OUTCOME_UNCERTAIN');

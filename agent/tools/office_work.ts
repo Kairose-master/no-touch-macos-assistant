@@ -16,33 +16,33 @@ export default defineWorkflowTool({
   }
   const job=await prepare(ctx.session.id,request,ctx.session.turn.id);
   if(job.status==='completed')return complete(job.id);
-  if(job.status==='cancelled'||job.cancelRequested)return {kind:'work',...job};
+  if(job.status==='cancelled'||job.cancelRequested)return {kind:'work',...job,approvalThisCall:false};
   const approval=await ctx.ask({prompt:`${request.resumeJobId?'중단 작업 재개':'업무 실행 전 계획 확인'} · ${job.name}\n${job.preview}\n\n작업 ID ${job.id}\n완료된 단계는 재실행하지 않습니다. 불명확한 효과는 자동 반복하지 않습니다.`,display:'confirmation',options});
   if(approval.status!=='answered'||approval.optionId!=='approve')return cancel(job.id);
-  await accept(job.id);
+  await accept(job.id,ctx.callId);
   for(let index=0;index<job.steps.length;index++){
-    if(ctx.abortSignal.aborted)return cancel(job.id);
+    if(ctx.abortSignal.aborted)return cancel(job.id,undefined,true);
     const current=await inspect(job.id);
-    if(current.cancelRequested)return complete(job.id);
+    if(current.cancelRequested)return complete(job.id,true);
     if(current.steps[index]!.status==='verified')continue;
     if(current.steps[index]!.kind==='file_change'){
       const prompt=await filePrompt(job.id,index);
       const answer=await ctx.ask({prompt,display:'confirmation',options:[{id:'approve',label:'이 파일 변경 승인',style:'primary'},{id:'deny',label:'거절'}]});
-      if(answer.status!=='answered'||answer.optionId!=='approve')return cancel(job.id,index);
+      if(answer.status!=='answered'||answer.optionId!=='approve')return cancel(job.id,index,true);
       await approveFile(job.id,index);
     }
-    await executeStep(job.id,index);
+    try{await executeStep(job.id,index);}catch{return complete(job.id,true);}
   }
-  return complete(job.id);
+  return complete(job.id,true);
  },
 });
-async function prepare(sessionId:string,request:WorkRequest,executionKey:string){'use step';try{return await(await import('../lib/work.ts')).prepareJob(sessionId,request,executionKey);}catch(error){throw new FatalError(error instanceof Error?error.message:'WORK_PREPARE_FAILED');}}
+async function prepare(sessionId:string,request:WorkRequest,executionKey:string){'use step';try{return await(await import('../lib/work.ts')).prepareJob(sessionId,request,executionKey);}catch(error){throw new FatalError('WORK_PREPARATION_FAILED: '+(error instanceof Error?error.message:'UNKNOWN'));}}
 async function inspect(id:string){'use step';return(await import('../lib/work.ts')).readJob(id);}
-async function accept(id:string){'use step';return(await import('../lib/work.ts')).acceptJob(id,true);}
+async function accept(id:string,approvalCallId:string){'use step';return(await import('../lib/work.ts')).acceptJob(id,true,approvalCallId);}
 async function executeStep(id:string,index:number){'use step';try{return await(await import('../lib/work.ts')).executeJobStep(id,index);}catch(error){throw new FatalError(error instanceof Error?error.message:'WORK_OUTCOME_UNCERTAIN');}}
 async function filePrompt(id:string,index:number){'use step';return(await import('../lib/work.ts')).stepChangePreview(id,index);}
 async function approveFile(id:string,index:number){'use step';return(await import('../lib/work.ts')).approveFileStep(id,index);}
-async function complete(id:string){'use step';return(await import('../lib/work.ts')).finishJob(id);}
-async function cancel(id:string,index?:number){'use step';return(await import('../lib/work.ts')).cancelJob(id,index);}
+async function complete(id:string,approvalThisCall=false){'use step';const work=await(await import('../lib/work.ts')).finishJob(id);return{...work,approvalThisCall};}
+async function cancel(id:string,index?:number,approvalThisCall=false){'use step';const work=await(await import('../lib/work.ts')).cancelJob(id,index);return{...work,approvalThisCall};}
 async function validateProposal(plan:WorkPlan){'use step';const w=await import('../lib/work.ts');return{preview:w.planPreview(plan),test:await w.testRecipe(plan)};}
 async function commitRecipe(plan:WorkPlan,test:{passed:boolean;stepCount:number}){'use step';return(await import('../lib/work.ts')).saveRecipe(plan,test);}

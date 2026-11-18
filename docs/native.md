@@ -52,3 +52,8 @@ PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-browsers npm run test:native
 `setup:native`는 창 목록의 표시 제목과 별개로 각 보이는 Notes 창의 완전한 AX snapshot에서 전용 폴더와 유일한 선택 폴더 셀을 확인합니다. 일치하는 창이 0개면 기본 창에서 NoTouch Demo API 폴더를 선택하고, 2개 이상이면 하나의 기본 창만 해당 폴더로 준비하세요. 권한 오류는 원래 CLI 오류 코드를 보존하며 같은 터미널에서 `npm run preflight`로 확인합니다. `live`도 동일한 선택 폴더 검증기를 사용합니다. 서버 시작은 저장된 프로필로 수행되므로 이전 setup 실패가 자동으로 해결됐다는 뜻은 아닙니다.
 
 회귀 테스트 4개와 실제 Mac의 읽기 전용 검사를 통과했습니다. 해당 수정 이후 사용자 Terminal에서 setup 전체를 재실행하는 검증은 별도이며, 검증 중 앱 클릭·메모 생성·프로필 갱신은 하지 않았습니다. [검증 결과](evidence/native-setup-result.json).
+
+
+현재 runtime은 기존 전용 profile 범위 내에서 Notes를 기본 headless launch로 백그라운드 복원하고, 완전한 sidebar scope에서 유일한 NoTouch 폴더만 선택할 수 있습니다. 전면 앱이 Notes이면 자동 폴더 선택은 중단해 사용자 작업을 방해하지 않습니다. 전용 폴더가 없거나 후보가 여러 개이면 임의 선택/생성하지 않습니다. Finder는 새 창 ID를 다시 찾으며 전용 files 폴더의 NoTouch-scope 디렉터리로 범위를 확인합니다. 이 scope 디렉터리는 파일 카드에서 제외되고 파일 변경 capability가 이동/삭제할 수 없습니다. 범용 launch/클릭은 모델에 노출하지 않습니다.
+
+Notes가 전면 앱이면 자동 준비와 기록은 사용자 작업 보호를 위해 대기합니다. 앱이 백그라운드이고 기존 전용 NoTouch 폴더가 유일하게 검증될 때 실행·폴더 선택·신규 기록을 자동 진행합니다. 최초 전용 폴더가 없는 새 Mac에 임의 폴더를 자동 생성하는 기능은 포함하지 않습니다.

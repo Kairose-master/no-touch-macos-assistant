@@ -100,6 +100,7 @@ NO_TOUCH_DATA_DIR="$PWD/.demo-browser-1" PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-
 - [2분 발표와 운영 절차](docs/demo.md)
 - [네이티브 준비·실행·검증](docs/native.md)
 - [실제 모델·업무 레시피·작업 기록·복구](docs/workflows.md)
+- [eve 승인·재시작·중복 방지 2분 시연](docs/eve-demo.md)
 - [종합 사무 비서 확장 로드맵](docs/roadmap.md)
 - [검증 결과와 한계](docs/verification.md)
 - [공식 API 확인 근거](docs/sources.md)

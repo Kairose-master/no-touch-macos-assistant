@@ -30,17 +30,21 @@ const live = () => process.env.NO_TOUCH_MODE === 'live';
 const operationKind = (kind: string) => `${live() ? 'live' : 'fixture'}:${kind}`;
 
 export async function writeNote(scope: string, input: NoteInput) {
-  return measured('write_note', () => once(scope, operationKind('write_note'), input, () => withAppLock(async () => {
-    if (live()) { const { nativeWriteNote } = await import('./native-notes.ts'); return nativeWriteNote(input); }
+  return measured('write_note', () => withAppLock(async () => {
+    let prepared;
+    if(live()){try{prepared=await(await import('./native-ready.ts')).prepareNativeNotes();}catch(error){throw new Error('NOTES_PREPARATION_FAILED: '+(error instanceof Error?error.message:'UNKNOWN'));}}
+    return once(scope, operationKind('write_note'), input, async () => {
+    if (live()) { const { nativeWriteNote } = await import('./native-notes.ts'); return nativeWriteNote(input, prepared!); }
     const d = desktop(); const content = `${input.title}\n${input.body}`;
     await d.act('notes', s.noteNew, 'click', fieldEquals(s.noteBody, ''), undefined, inDemo);
     await d.act('notes', s.noteBody, 'set-value', fieldEquals(s.noteBody, content), content, fieldEquals(s.noteBody, ''));
     return { kind: 'note', title: input.title, verified: true, mode: 'fixture', bundleId: bundles.notes };
-  })));
+    });
+  }));
 }
 export async function addReminder(scope: string, input: ReminderInput) {
   new Intl.DateTimeFormat('en', { timeZone: input.timeZone }).format();
-  return measured('add_reminder', () => once(scope, operationKind('add_reminder'), input, () => withAppLock(async () => {
+  return measured('add_reminder', () => withAppLock(() => once(scope, operationKind('add_reminder'), input, async () => {
     if (live()) { const { nativeAddReminder } = await import('./native-office.ts'); return nativeAddReminder(scope, input); }
     const d = desktop();
     await d.act('reminders', s.reminderNew, 'click', fieldEquals(s.reminderTitle, ''), undefined, inDemo);
@@ -80,8 +84,9 @@ export async function latestFiles() {
 }
 export async function changeFile(scope: string, input: ChangeInput) {
   if (live()) await (await import('./native-worker.ts')).nativeProfile(); else desktop();
-  return measured(`file_${input.action}`, () => once(scope, operationKind('change_file'), input, () => withAppLock(async () => {
-    if (live()) await (await import('./native-office.ts')).nativeFinderSnapshot();
+  return measured(`file_${input.action}`, () => withAppLock(async () => {
+    if(live()){try{await(await import('./native-office.ts')).nativeFinderSnapshot();}catch(error){throw new Error('FINDER_PREPARATION_FAILED: '+(error instanceof Error?error.message:'UNKNOWN'));}}
+    return once(scope, operationKind('change_file'), input, async () => {
     const card = await fileCard(input.name);
     if (card.fingerprint !== input.fingerprint) throw new Error('FILE_CHANGED: request a fresh card and a new approval.');
     const dir = join(await filesRoot(), input.action === 'share' ? '.share-preview' : input.destination);
@@ -96,5 +101,6 @@ export async function changeFile(scope: string, input: ChangeInput) {
     if (input.action !== 'share') { try { await lstat(card.path); throw new Error('SOURCE_STILL_PRESENT'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; } }
     if (live() && input.action !== 'share') await (await import('./native-office.ts')).verifyFinderAbsent(input.name);
     return { kind: 'file-change', action: input.action, name: input.name, destination: input.destination, verified: true, mode: live() ? 'live' : 'fixture', transport: 'scoped-filesystem', externalDelivery: false };
-  })));
+    });
+  }));
 }

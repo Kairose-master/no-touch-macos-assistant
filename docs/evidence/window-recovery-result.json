@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "scope": "dedicated NoTouch samples only",
+  "model": "real ChatGPT subscription",
+  "browser": "CUA background in-app browser",
+  "originalUncertainUserJobReplayed": false,
+  "sameBlockedSampleJobResumed": true,
+  "nativeStepsVerified": 3,
+  "notesUIReadback": true,
+  "reminderSeparateProcessReadback": true,
+  "reminderIdStable": true,
+  "finderCardsVerified": true,
+  "completedJobResultReused": true,
+  "obsoleteVerifiedErrorCleared": true,
+  "globalNoteCountReplayAssertion": "Not asserted: another user job completed in the shared sample folder; later the Notes window was unavailable.",
+  "physicalInputUsed": false,
+  "backgroundLaunchActivationEvents": 0,
+  "continuousCursorInvariantForFinalRun": false,
+  "fixtureRestartAndDedupPassed": true
+}

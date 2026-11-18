@@ -1,8 +1,9 @@
+import { mkdir,readFile,realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { bundles, type ReminderInput } from './contracts.ts';
 import { digest } from './storage.ts';
 import { callNativeWorker, nativeProfile } from './native-worker.ts';
-import { nodes, snapshot } from './native-cli.ts';
+import { nativeCli,nodes, snapshot } from './native-cli.ts';
 
 export async function nativeAddReminder(scope: string, input: ReminderInput) {
   const profile = await nativeProfile();
@@ -14,23 +15,21 @@ export async function nativeAddReminder(scope: string, input: ReminderInput) {
   return { kind: 'reminder', title: String(verified.title), dueAt: input.dueAt, timeZone: input.timeZone,
     verified: true, mode: 'live', bundleId: bundles.reminders, transport: 'EventKit', reminderId: saved.reminderId, hasAlarm: true };
 }
-export async function verifyFinderAbsent(name: string) {
-  const deadline = Date.now() + 5000;
-  while (Date.now() < deadline) {
-    const state = await nativeFinderSnapshot();
-    if (!nodes(state).some(node => node.name === name)) return;
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  throw new Error('FINDER_RESULT_UNVERIFIED: inspect the moved file before any further write.');
+import {resolveWindow,discoverWindow} from './window-resolution.ts';
+async function findFinderScope(pin:string,scopeName:string){
+ const load=(id:string)=>snapshot('finder',id);const list=()=>nativeCli(['list-windows','--app','com.apple.finder']);const valid=(s:Awaited<ReturnType<typeof snapshot>>)=>s.tree.name==='files'&&nodes(s).some(n=>n.name===scopeName);
+ try{return await resolveWindow(pin,load,list,valid);}catch(error){if(!(error instanceof Error)||!error.message.startsWith('PINNED_WINDOW_SCOPE_MISMATCH:'))throw error;return discoverWindow(load,list,valid);}
 }
-export async function nativeFinderSnapshot() {
-  const profile = await nativeProfile();
-  await callNativeWorker({ operation: 'open-folder', folder: join(profile.dataDirectory, 'files') });
-  const deadline = Date.now() + 5000;
-  while (Date.now() < deadline) {
-    const state = await snapshot('finder', profile.finderWindowId);
-    if (state.complete && state.tree.name === 'files') return state;
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  throw new Error('PINNED_FINDER_FOLDER_UNVERIFIED: configure a unique sample window again.');
+export async function nativeFinderSnapshot(){
+ const p=await nativeProfile();const root=join(p.dataDirectory,'files');
+ if(await realpath(root)!==root||await readFile(join(p.dataDirectory,'.no-touch-fixture'),'utf8')!=='no-touch-fixture-v1')throw new Error('UNSAFE_DEMO_ROOT');
+ const scopeName='NoTouch-scope-'+digest({directory:root}).slice(0,32);const scopePath=join(root,scopeName);await mkdir(scopePath,{recursive:true,mode:0o700});if(await realpath(scopePath)!==scopePath)throw new Error('UNSAFE_DEMO_ROOT');
+ await callNativeWorker({operation:'open-folder',folder:root});
+ const deadline=Date.now()+5000;while(true){try{return await findFinderScope(p.finderWindowId,scopeName);}catch(error){if(!(error instanceof Error)||!/^PREPARED_WINDOW_NOT_FOUND:|^PINNED_WINDOW_SCOPE_MISMATCH:/.test(error.message)||Date.now()>deadline)throw error;await new Promise(r=>setTimeout(r,100));}}
+}
+export async function verifyFinderAbsent(name:string){
+ let state=await nativeFinderSnapshot();const p=await nativeProfile();const scopeName='NoTouch-scope-'+digest({directory:join(p.dataDirectory,'files')}).slice(0,32);const deadline=Date.now()+5000;
+ // Every readback must prove completeness, app/window identity and sample scope.
+ // Re-observation never reissues the filesystem mutation.
+ while(true){if(!nodes(state).some(n=>n.name===name))return;if(Date.now()>deadline)throw new Error('FINDER_RESULT_UNVERIFIED');await new Promise(r=>setTimeout(r,100));state=await findFinderScope(state.window!.id,scopeName);}
 }

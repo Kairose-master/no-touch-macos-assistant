@@ -7,6 +7,7 @@ export interface NativeSnapshot extends Snapshot { window?: { id: string; title?
 export interface CLIEnvelope { ok: boolean; data?: any; error?: { code: string; disposition?: { delivery: string; retry: string } } }
 const ref = /^@[^:]+:e\d+$/;
 export function validateNativeArgs(args: string[], input?: string) {
+  if(args[0]==='permissions'){if(args.length!==1)throw new Error('NATIVE_ARGS_DENIED');return;}
   if (['click', 'type', 'set-value'].includes(args[0])) {
     if (!ref.test(args[1] ?? '') || (args[0] === 'click' ? args.length !== 2 : args.length !== 3 || args[2] !== '--stdin' || input === undefined || Buffer.byteLength(input) > 128000)) throw new Error('NATIVE_ARGS_DENIED');
     return;
