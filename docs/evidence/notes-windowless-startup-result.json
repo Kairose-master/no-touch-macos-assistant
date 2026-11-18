@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "scope": "existing dedicated NoTouch folder; no new note, reminder or file mutation in this follow-up",
+  "startupCommand": "NO_TOUCH_MODEL=chatgpt npm run live",
+  "startupReadsOnlySavedProfileAndExistingRemindersPermission": true,
+  "notesWindowRequiredAtStartup": false,
+  "actualEveReady": true,
+  "actualWebStatus": 200,
+  "actualLocalNativeBadge": true,
+  "actualNotesWindowCountBeforeReopen": 0,
+  "backgroundReopenCommand": "/usr/bin/open -g -b com.apple.Notes",
+  "actualVisibleWindowAfterReopen": true,
+  "actualNativeNotesPreparationPassed": true,
+  "backgroundReopenDispatchObservation": {
+    "activationEvents": 0,
+    "cursorUnchanged": true,
+    "cursorSampleIntervalMs": 25
+  },
+  "subsequentPreparationObservation": {
+    "activationEvents": 0,
+    "cursorUnchanged": true,
+    "cursorSampleIntervalMs": 25
+  },
+  "entireReopenToVisibleIntervalContinuouslyObserved": false,
+  "newNativeNoteWriteRetested": false,
+  "threeAppWorkflowRetestedInThisFollowUp": false,
+  "originalUncertainWorkReplayed": false,
+  "profileOrPermissionsChanged": false,
+  "unitTestsPassed": 50
+}

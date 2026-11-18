@@ -6,12 +6,12 @@
 
 | 작업 | 실행과 검증 |
 |---|---|
-| Notes | `com.apple.Notes`의 미리 준비한 기본 창·선택된 `NoTouch Demo API` 폴더만 사용. `snapshot -i` → 고유 toolbar 버튼의 완전한 scoped snapshot → ref click → 새 snapshot에서 메모 개수 +1·빈 신규 본문 확인 → ref set-value → 내용 재조회 |
+| Notes | 승인된 작업을 실행할 때 `com.apple.Notes`의 기존 전용 `NoTouch Demo API` 폴더와 창을 준비·검증. `snapshot -i` → 고유 toolbar 버튼의 완전한 scoped snapshot → ref click → 새 snapshot에서 메모 개수 +1·빈 신규 본문 확인 → ref set-value → 내용 재조회 |
 | Reminders | Swift EventKit worker가 저장한 전용 NoTouch 목록 ID로만 신규 항목 생성. ISO offset·IANA 시간대·절대 알람을 commit한 뒤 별도 worker 프로세스로 재조회 |
 | Finder | `com.apple.finder`를 `NSWorkspace`의 `activates=false`로 샘플 폴더에 연결하고 고정 창을 `snapshot -i`로 읽음. 파일 metadata·fingerprint는 marker가 있는 샘플 폴더에서만 읽음 |
 | 파일 변경 | eve의 매번 명시적 승인 이후 제한된 filesystem rename. 원본 부재·목적지 파일 존재·Finder에서 원본 이름 사라짐까지 확인. Trash는 샘플 하위 폴더, 공유는 로컬 preview뿐 |
 
-범용 click/shell/AppleScript는 모델 도구가 아닙니다. CLI는 기본 headless만 사용하며 `press`, 좌표, `focus`, `focus-window`, `--headed`, `--activate`를 차단합니다. CLI launch는 고정 번들 ID의 비활성 실행만 허용하는 내부 경계에 있고 실제 데모 런타임은 준비된 창을 요구합니다.
+범용 click/shell/AppleScript는 모델 도구가 아닙니다. CLI는 기본 headless만 사용하며 `press`, 좌표, `focus`, `focus-window`, `--headed`, `--activate`를 차단합니다. CLI launch는 고정 번들 ID의 비활성 실행만 허용하는 내부 경계입니다. 서버 기동은 앱 준비와 분리하며, 앱 작업은 승인 후 전용 창을 검증한 다음 실행합니다.
 
 ## 새 Mac 준비
 
@@ -22,11 +22,11 @@ Node 24+, npm, Xcode Command Line Tools의 Swift가 필요합니다. 기본 `npm
 3. NoTouch Local Worker의 Reminders 전체 읽기·쓰기는 별도의 명시적 운영 결정 후 `npm run permission:native`로 OS 대화상자를 요청합니다. macOS 권한 자체는 모든 목록에 적용됩니다. 앱 코드는 저장된 NoTouch 목록만 조회·추가하며 기존 알림 수정·삭제 기능이 없습니다. 권한 거절 시 실행을 중단합니다.
 4. Notes에서 **직접** `NoTouch Demo API` 전용 일반 폴더를 새로 만들고 기본 Notes 창에서 선택합니다. 부동 메모 창을 쓰지 않습니다. 발표 전 준비 단계의 창 선택은 포커스를 바꿀 수 있으므로 발표 중 실행과 구분합니다. 이 이름을 기존 개인 폴더에 붙이지 마세요.
 5. `npm run setup:native`를 실행합니다. marker가 있는 새 샘플 파일 폴더와 전용 Reminders 목록을 준비하고 유일한 Notes/Finder 창 ID를 고정합니다. 기존 샘플을 초기화하거나 지우지 않습니다. 같은 제목의 창이 여러 개면 중단합니다.
-6. `npm run live`로 루프백 서버를 시작하고 http://127.0.0.1:3000 을 직접 엽니다. `LOCAL NATIVE` 배너를 확인합니다. 권한 요청·Notes 창 생성·브라우저 활성화는 런타임이 하지 않습니다. `Ctrl+C`로 두 서버를 종료합니다.
+6. `npm run live`로 루프백 서버를 시작하고 http://127.0.0.1:3000 을 직접 엽니다. `LOCAL NATIVE` 배너를 확인합니다. 기동 시에는 저장된 프로필의 유효 범위와 기존 Reminders 권한만 읽으며 Notes 창이 닫혀 있어도 웹을 시작합니다. 이때 권한 요청·Notes 실행이나 창/폴더 선택·브라우저 활성화를 하지 않습니다. Notes 준비는 사용자가 계획을 승인한 뒤 해당 작업의 실행 단계에서 확인합니다. `Ctrl+C`로 두 서버를 종료합니다.
 
 고정 시나리오 모델을 명시적으로 선택하면 자유로운 자연어 모델이 아니라 스크립트입니다. 이 시나리오의 live 기본 일정은 가까운 시각의 알림을 피하기 위한 **2030-11-19 15:00 Asia/Seoul**입니다. `NO_TOUCH_DEMO_DUE_AT`으로 명시적으로 바꿀 수 있습니다. 실제 모델을 평가하려면 별도로 Gateway 인증을 구성하고 `NO_TOUCH_MODEL=gateway npm run live`를 사용합니다. 후속으로 사용자가 선택한 ChatGPT 구독 모델을 실제 웹·세 앱과 연결해 검증했습니다. `NO_TOUCH_MODEL=chatgpt npm run live` 및 [workflows.md](workflows.md)를 참조하세요. Gateway 품질·요금은 이 검증 범위가 아닙니다.
 
-`.demo-native/profile.json`에는 로컬 절대 경로·전용 목록 ID·창 ID가 있습니다. 권한/worker/창/선택 폴더가 없거나 다르면 fail closed합니다. Notes/Finder 창을 닫았거나 재실행했다면 사전 준비 후 setup을 다시 실행해야 합니다. 원래 자료를 찾거나 다른 창을 임의 선택하지 않습니다.
+`.demo-native/profile.json`에는 로컬 절대 경로·전용 목록 ID·창 ID가 있습니다. 유효한 프로필·worker·기존 Reminders 권한이 없으면 서버 기동을 중단합니다. Notes/Finder 창의 현재 상태는 서버 기동의 선행조건이 아닙니다. 승인된 앱 작업에서 기존 전용 범위를 확인하고, 준비하지 못하면 해당 작업을 멈춥니다. 최초 프로필이 없다면 사전 준비와 setup이 필요하며, 원래 자료를 찾거나 다른 창을 임의 선택하지 않습니다. 서버가 시작됐다는 메시지는 앱 준비나 쓰기 성공의 증거가 아닙니다.
 
 ## 재현과 한계
 
@@ -49,11 +49,13 @@ PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-browsers npm run test:native
 
 ## Notes 준비 오류 진단
 
-`setup:native`는 창 목록의 표시 제목과 별개로 각 보이는 Notes 창의 완전한 AX snapshot에서 전용 폴더와 유일한 선택 폴더 셀을 확인합니다. 일치하는 창이 0개면 기본 창에서 NoTouch Demo API 폴더를 선택하고, 2개 이상이면 하나의 기본 창만 해당 폴더로 준비하세요. 권한 오류는 원래 CLI 오류 코드를 보존하며 같은 터미널에서 `npm run preflight`로 확인합니다. `live`도 동일한 선택 폴더 검증기를 사용합니다. 서버 시작은 저장된 프로필로 수행되므로 이전 setup 실패가 자동으로 해결됐다는 뜻은 아닙니다.
+`setup:native`는 창 목록의 표시 제목과 별개로 각 보이는 Notes 창의 완전한 AX snapshot에서 전용 폴더와 유일한 선택 폴더 셀을 확인합니다. 일치하는 창이 0개면 기본 창에서 NoTouch Demo API 폴더를 선택하고, 2개 이상이면 하나의 기본 창만 해당 폴더로 준비하세요. 권한 오류는 원래 CLI 오류 코드를 보존하며 같은 터미널에서 `npm run preflight`로 확인합니다. `live` 기동 자체는 Notes 창을 검사·조작하지 않습니다. 앱 작업을 승인한 뒤 실행 준비 검사에서 전용 폴더를 확인하므로, 서버 시작만으로 이전 setup 오류가 해결됐다고 판단하지 않습니다.
 
 회귀 테스트 4개와 실제 Mac의 읽기 전용 검사를 통과했습니다. 해당 수정 이후 사용자 Terminal에서 setup 전체를 재실행하는 검증은 별도이며, 검증 중 앱 클릭·메모 생성·프로필 갱신은 하지 않았습니다. [검증 결과](evidence/native-setup-result.json).
 
 
-현재 runtime은 기존 전용 profile 범위 내에서 Notes를 기본 headless launch로 백그라운드 복원하고, 완전한 sidebar scope에서 유일한 NoTouch 폴더만 선택할 수 있습니다. 전면 앱이 Notes이면 자동 폴더 선택은 중단해 사용자 작업을 방해하지 않습니다. 전용 폴더가 없거나 후보가 여러 개이면 임의 선택/생성하지 않습니다. Finder는 새 창 ID를 다시 찾으며 전용 files 폴더의 NoTouch-scope 디렉터리로 범위를 확인합니다. 이 scope 디렉터리는 파일 카드에서 제외되고 파일 변경 capability가 이동/삭제할 수 없습니다. 범용 launch/클릭은 모델에 노출하지 않습니다.
+승인된 작업의 runtime은 기존 전용 profile 범위 내에서 Notes의 기본 headless 백그라운드 준비를 시도하고, 완전한 sidebar scope에서 유일한 NoTouch 폴더만 선택할 수 있습니다. 이 준비는 서버 기동 시 실행하지 않습니다. 전면 앱이 Notes이면 자동 폴더 선택은 중단해 사용자 작업을 방해하지 않습니다. 전용 폴더가 없거나 후보가 여러 개이면 임의 선택/생성하지 않습니다. Finder는 새 창 ID를 다시 찾으며 전용 files 폴더의 NoTouch-scope 디렉터리로 범위를 확인합니다. 이 scope 디렉터리는 파일 카드에서 제외되고 파일 변경 capability가 이동/삭제할 수 없습니다. 범용 launch/클릭은 모델에 노출하지 않습니다.
 
-Notes가 전면 앱이면 자동 준비와 기록은 사용자 작업 보호를 위해 대기합니다. 앱이 백그라운드이고 기존 전용 NoTouch 폴더가 유일하게 검증될 때 실행·폴더 선택·신규 기록을 자동 진행합니다. 최초 전용 폴더가 없는 새 Mac에 임의 폴더를 자동 생성하는 기능은 포함하지 않습니다.
+승인된 Notes 작업에서 Notes가 전면 앱이면 자동 준비와 기록은 사용자 작업 보호를 위해 대기합니다. 앱이 백그라운드이고 기존 전용 NoTouch 폴더가 유일하게 검증될 때 실행·폴더 선택·신규 기록을 진행합니다. 최초 전용 폴더가 없는 새 Mac에 임의 폴더를 자동 생성하는 기능은 포함하지 않습니다.
+
+`verified=0, visible=0`은 권한이 있어도 Notes가 창 없이 실행 중일 수 있다는 뜻입니다. 기본 `agent-desktop launch`는 프로세스 실행까지만 확인합니다. 승인된 Notes 작업의 준비 단계는 짧게 창을 기다린 뒤에도 후보가 없으면 고정 명령 `/usr/bin/open -g -b com.apple.Notes`를 한 번만 호출하고, 최대 10초간 읽기 전용으로 보이는 창을 기다립니다. `-g`는 macOS `open(1)`의 비활성 실행 옵션이며 `--activate`나 물리 입력으로 대체하지 않습니다. 이후에도 완전한 AX 읽기와 전용 폴더의 유일성을 확인해야 쓰기를 진행합니다. Notes의 재열기 동작은 OS·앱 버전에 따라 달라질 수 있으며, 창이 끝내 없으면 해당 작업만 준비 차단 상태로 남고 웹 서버는 계속 사용할 수 있습니다.

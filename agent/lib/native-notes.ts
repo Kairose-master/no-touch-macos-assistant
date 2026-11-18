@@ -1,6 +1,7 @@
 import { bundles, type NoteInput } from './contracts.ts';
 import { nativeCli, nodes, one, scoped, snapshot, value, type NativeSnapshot } from './native-cli.ts';
 import { nativeProfile } from './native-worker.ts';
+import { assertNotesBackground } from './native-ready.ts';
 
 function assertSampleFolder(state: NativeSnapshot, folder: string) {
   if (!state.complete || state.tree.name !== folder || !nodes(state).some(node => node.role === 'cell' && node.states?.includes('selected') && node.name?.startsWith(folder + ','))) throw new Error('OWN_NOTES_FOLDER_NOT_SELECTED');
@@ -25,6 +26,7 @@ export async function nativeWriteNote(input: NoteInput, prepared: NativeSnapshot
     const temporary: NativeSnapshot = { ...before, tree: toolbar[0] };
     const target = one(nodes(temporary).filter(node => node.role === 'button' && node.name === '새로운 메모' && !node.states?.includes('disabled')));
     const scope = await scoped(target);
+    await assertNotesBackground();
     const result = await nativeCli(['click', scope.tree.ref_id!]);
     const after = await snapshot('notes', windowId);
     assertSampleFolder(after, profile.notesFolder);
@@ -40,6 +42,7 @@ export async function nativeWriteNote(input: NoteInput, prepared: NativeSnapshot
   if (await value(body) !== '') throw new Error('EXISTING_NOTE_CONTENT: refusing to edit.');
   const title = `NoTouch Demo · ${input.title}`;
   const text = `${title}\n${input.body}`;
+  await assertNotesBackground();
   await nativeCli(['set-value', body.ref_id!, '--stdin'], text);
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) {
