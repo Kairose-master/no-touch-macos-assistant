@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "change": "Notes setup validates complete AX snapshots and exactly one selected sample folder rather than list-windows title",
+  "regressionTests": 4,
+  "totalUnitTests": 18,
+  "readOnlyMacCheck": true,
+  "matchedExistingProfile": true,
+  "terminalExecutionRecheck": false,
+  "appMutationExecuted": false,
+  "permissionErrorsPreserved": true,
+  "multipleVerifiedCandidatesRejected": true
+}
