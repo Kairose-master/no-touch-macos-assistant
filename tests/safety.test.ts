@@ -8,12 +8,21 @@ import { toolPolicy, changeInput, reminderInput } from '../agent/lib/contracts.t
 import { once } from '../agent/lib/storage.ts';
 import { seed } from '../scripts/seed.ts';
 import { writeNote, addReminder, latestFiles, changeFile } from '../agent/lib/office.ts';
+import { validateNativeArgs } from '../agent/lib/native-cli.ts';
+
+test('native command boundary requires qualified refs and unique scoped snapshots, without physical fallback', () => {
+  for (const args of [['press','cmd+n'], ['focus','@s1:e1'], ['focus-window','w-1'], ['launch','com.apple.Notes','--activate'], ['click','@e1'], ['click','@s1:e1','--headed'], ['snapshot','-i'], ['snapshot','--app','com.apple.Mail','-i'], ['snapshot','--app','com.apple.Notes','--root','@s1:e1','-i'], ['snapshot','--app','com.apple.Notes','-i','-i']]) assert.throws(() => validateNativeArgs(args));
+  validateNativeArgs(['snapshot','--app','com.apple.Notes','--window-id','w-1','-i']);
+  validateNativeArgs(['snapshot','--root','@s1:e1','-i']);
+  validateNativeArgs(['set-value','@s1:e1','--stdin'], 'sample');
+});
 
 const windows = { notes: 'w-1', reminders: 'w-2', finder: 'w-3' };
 function snapshot(id: number, names = ['New Note'], value = ''): Envelope {
   return { ok: true, data: { app: 'com.apple.Notes', snapshot_id: `s${id}`, complete: true, tree: { role: 'window', children: names.map((name, index) => ({ role: 'button', name, value, ref_id: `@s${id}:e${index + 1}` })) } } };
 }
 test('headless boundary rejects physical input, focus, arbitrary apps, old refs and extra flags', () => {
+  process.env.NO_TOUCH_MODEL = 'rehearsal';
   for (const args of [['press','cmd+n'], ['focus','@s1:e1'], ['launch','Notes'], ['focus-window','w-1'], ['click','@e1'], ['click','@s1:e1','--headed'], ['snapshot','--app','Mail','-i']]) assert.throws(() => validateArgs(args));
   validateArgs(['type','@s1:e1','--stdin'], 'hello');
   validateArgs(['set-value','@s1:e1','--stdin'], 'hello');
@@ -73,5 +82,5 @@ test('isolated office workflow verifies records, fingerprints, move, reversible 
   assert.ok(!(await latestFiles()).cards.some(c => c.name === 'private-link'));
   assert.throws(() => changeInput.parse({ action: 'trash', name: '../escape', fingerprint: 'a'.repeat(64), destination: 'Trash' }));
   assert.throws(() => reminderInput.parse({ title: 'test', dueAt: '2026-11-19T15:00:00', timeZone: 'Asia/Seoul' }));
-  process.env.NO_TOUCH_MODE = 'live'; await assert.rejects(latestFiles(), /LIVE_RECIPES_UNVERIFIED/); process.env.NO_TOUCH_MODE = 'fixture';
+  process.env.NO_TOUCH_MODE = 'live'; await assert.rejects(latestFiles(), /LIVE_DISABLED/); process.env.NO_TOUCH_MODE = 'fixture';
 });

@@ -21,7 +21,15 @@
     "preflight": "node scripts/preflight.mjs",
     "typecheck:web": "tsc -p apps/web/tsconfig.json --noEmit",
     "test:integration": "node --experimental-strip-types scripts/integration.ts",
-    "test:browser": "node --experimental-strip-types scripts/browser-test.ts"
+    "test:browser": "node --experimental-strip-types scripts/browser-test.ts",
+    "build:native": "node scripts/build-native.mjs",
+    "setup:native": "node --experimental-strip-types scripts/setup-native.ts",
+    "live": "node --experimental-strip-types scripts/run-live.ts",
+    "test:native": "node --experimental-strip-types scripts/native-browser-test.ts",
+    "permission:native": "node --experimental-strip-types scripts/request-native-permission.ts",
+    "test:web-mode": "node scripts/check-web-mode.mjs",
+    "test:real-model": "node --experimental-strip-types scripts/real-model-test.ts",
+    "test:native-workflow": "node --experimental-strip-types scripts/native-workflow-test.ts"
   },
   "dependencies": {
     "@ai-sdk/provider": "4.0.39",
@@ -49,7 +57,7 @@
     "node": ">=24"
   },
   "private": true,
-  "description": "Local eve office assistant rehearsal with durable per-action approvals and a headless desktop adapter.",
+  "description": "Local eve macOS office assistant with durable approvals, headless desktop observation and scoped native APIs.",
   "overrides": {
     "guarded-fetch": {
       "undici": "7.30.1"

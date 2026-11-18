@@ -9,5 +9,5 @@ for (const command of ['version', 'status', 'permissions']) {
   if (!envelope.ok) ready = false;
   if (command === 'permissions' && envelope.data?.accessibility?.state !== 'granted') ready = false;
 }
-console.log(ready ? 'Accessibility prerequisite present. Native app recipes still need authorized isolated rehearsal.' : 'Accessibility prerequisite missing. No settings, permission prompts, screenshots or app actions were invoked.');
+console.log(ready ? 'Accessibility prerequisite present. Live mode additionally requires the local worker permission and a pinned sample profile (see docs/native.md).' : 'Accessibility prerequisite missing. No settings, permission prompts, screenshots or app actions were invoked.');
 process.exitCode = ready ? 0 : 2;

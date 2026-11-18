@@ -24,3 +24,21 @@
 주의: eve 1.0.2의 HTTP 문서는 `idempotencyKey`를 지원하지만 해당 TypeScript `RespondTurnOptions`에는 필드가 없습니다. 통합 테스트는 이 부분만 공식 `Client.fetch`로 wire 형식을 사용합니다. 반환 HTTP 202 Accepted와 중복 요청의 동일 delivery ID를 실제 확인했습니다.
 
 추가 구현 근거: 설치된 `node_modules/eve/docs/sandbox/just-bash.mdx`의 `JustBashSandbox.environment({autoInstall:false})`와 `defineSandbox`를 사용합니다. 로컬 production build가 DefaultSandbox의 Docker 자동 선택에 의존하지 않도록 명시했습니다.
+
+
+네이티브 보완 API는 다음 Apple 공식 문서와 설치된 Swift SDK로 확인하고 실제 Mac에서 검증했습니다.
+
+- [EventKit event store](https://developer.apple.com/documentation/EventKit/EKEventStore): `requestFullAccessToReminders`, calendar-scoped fetch, `save(_:commit:)`.
+- [EventKit 접근](https://developer.apple.com/documentation/eventkit/accessing-the-event-store): macOS 권한과 usage description.
+- [Events and reminders 생성](https://developer.apple.com/documentation/eventkit/creating-events-and-reminders): due date components·알람 저장.
+- [NSWorkspace.OpenConfiguration.activates](https://developer.apple.com/documentation/appkit/nsworkspace/openconfiguration/activates): Finder 열 때 활성화 요청하지 않음.
+- [NSWorkspace open](https://developer.apple.com/documentation/appkit/nsworkspace/open(_:withapplicationat:configuration:completionhandler:)): Finder 번들 URL과 open configuration.
+
+사용자 승인 후에만 OS Reminders 권한 요청을 실행했습니다. `preflight`와 `live`는 보안 설정을 변경하거나 권한을 자동 요청하지 않습니다.
+
+
+- [eve 모델 설정](https://eve.dev/docs/agent-config): 공식 `chatgpt()`·`openai()` helper와 로컬 구독 모델.
+- [eve TUI 로그인](https://eve.dev/docs/guides/dev-tui): `/login chatgpt`, OS secret store와 로컬 개발 전용 자격 증명.
+- [eve workflow tools](https://eve.dev/docs/tools/workflows): `defineWorkflowTool`, `use workflow`, `use step`, `ctx.ask`, 재개와 FatalError.
+- [NSWorkspace 앱 활성화 알림](https://developer.apple.com/documentation/appkit/nsworkspace/didactivateapplicationnotification): 실행 중 전면 앱 전환 이벤트 관찰.
+- [NSEvent.mouseLocation](https://developer.apple.com/documentation/appkit/nsevent/mouselocation): 25ms 간격의 커서 위치 관찰.

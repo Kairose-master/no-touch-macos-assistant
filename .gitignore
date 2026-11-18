@@ -16,3 +16,4 @@ coverage/
 .demo*/
 docs/evidence/desktop-skill.json
 docs/evidence/macos-skill.json
+.native-build/

@@ -1,0 +1,18 @@
+import { spawn } from 'node:child_process';
+import { readJson } from '../agent/lib/storage.ts';
+import { callNativeWorker, nativeProfile, type NativeProfile } from '../agent/lib/native-worker.ts';
+import { snapshot } from '../agent/lib/native-cli.ts';
+const profile = await readJson<NativeProfile | null>('.demo-native/profile.json', null);
+if (!profile) throw new Error('Run setup:native first; no permission or setup is performed by live.');
+process.env.NO_TOUCH_MODE = 'live';
+process.env.NO_TOUCH_LIVE = 'I_AUTHORIZE_ISOLATED_APP_CONTROL';
+process.env.NO_TOUCH_DATA_DIR = profile.dataDirectory;
+process.env.NO_TOUCH_DEMO_DUE_AT ??= '2030-11-19T15:00:00+09:00';
+process.env.NO_TOUCH_MODEL ??= 'chatgpt';
+await nativeProfile();
+if (!(await callNativeWorker({ operation: 'status' })).fullAccess) throw new Error('REMINDERS_ACCESS_REQUIRED');
+const notes = await snapshot('notes', profile.notesWindowId);
+if (!notes.complete || notes.tree.name !== profile.notesFolder) throw new Error('Prepare the pinned NoTouch Notes main window before starting.');
+const child = spawn(process.execPath, ['scripts/run-demo.mjs', '--live'], { env: process.env, stdio: 'inherit' });
+for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => child.kill(signal));
+child.on('exit', code => { process.exitCode = code ?? 1; });

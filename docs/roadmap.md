@@ -1,18 +1,12 @@
-# 네이티브 연결과 종합 사무 비서 로드맵
+# 종합 사무 비서 로드맵
 
-## 1. 실제 macOS 연결 — 현재 남은 필수 단계
+## 1. 현재 구현과 다음 네이티브 검증
 
-현재 코드의 `office.desktop()`은 fixture만 반환하고 live 모드를 명확히 거부합니다. CLI 어댑터만 있다고 Notes·Reminders·Finder 연동이 완성된 것은 아닙니다. 아래 단계는 추가로 승인된 격리 테스트 환경에서 수행해야 합니다.
+실제 한국어 macOS의 전용 샘플에서 Notes headless 작성, EventKit 일정 저장·재조회, Finder 관찰, 승인 후 파일 이동과 커서·전면 앱 불변을 검증했습니다. [실행 절차](native.md)와 [정형 결과](evidence/native-result.json)를 참조하세요. UI 전용 Reminders 날짜 설정과 Finder 메뉴 이동은 검증 성공으로 포함하지 않습니다.
 
-1. 격리 macOS 계정 또는 준비된 macOS VM을 사용합니다. 실제 iCloud 계정·사용자 메모·알림·Downloads를 사용하지 않습니다. VM 설치와 설정 변경은 별도로 승인받아야 하며 이 프로젝트가 자동 수행하지 않습니다.
-2. 실행 호스트의 Accessibility 권한을 사람이 구성한 뒤 `agent-desktop permissions`로 확인합니다. Screen Recording은 AX 기반 작업에 필요하지 않습니다. 이 작업에서 관찰한 Accessibility는 denied였습니다.
-3. 운영자가 샘플 Notes 폴더·Reminders 목록·Finder 폴더와 창을 준비합니다. `list-windows --app <bundle-id>`로 창을 지정하고 `snapshot --app <bundle-id> -i --window-id <id>`를 관찰합니다. **현재 세션에서는 이 앱 관찰·조작을 실행하지 않았습니다.**
-4. 앱/OS 버전·언어·번들 ID·창 ID·샘플 컨테이너 식별자를 고정합니다. Notes의 빈 신규 본문, Reminders의 제목·날짜·시간·저장, Finder의 실제 수정 시각 정렬·파일 동일성을 확인합니다. 예제 AX role/name을 실제 앱의 값으로 가정하지 않습니다.
-5. 범용 클릭 도구를 노출하지 않은 채 고수준 capability별 전용 recipe를 구현합니다. 저장 버튼까지 각 액션의 전후 조건을 명시합니다. 정적 role/name만으로 기존 개인 메모를 안전하게 구분할 수 없다면 live를 켜지 않습니다.
-6. 승인 전 미변경, 거절, 저장 확인, 중간 crash, 중복 방지, stale/ambiguous ref, 권한 철회, 비동기 저장, 다중 창을 테스트합니다. 발표자 포커스와 커서 불변도 별도 관찰합니다.
-7. 이 검증이 끝난 recipe만 명시적 운영 스위치로 활성화합니다. 현재의 `NO_TOUCH_LIVE` 문자열은 CLI transport의 추가 잠금일 뿐, live 기능을 완성하거나 활성화하지 않습니다.
+다음은 다른 macOS 버전·언어, 권한 철회, 창 재생성, 사람의 동시 앱 조작, 비동기 iCloud 저장·재실행 후 Notes 지속성, 중간 crash에 대한 reconciliation을 확장 검증합니다. 현재 Notes 성공 근거는 즉시 UI 내용 재조회이며 앱을 종료하거나 iCloud 동기화를 검사하지 않았습니다. 격리 계정이나 macOS VM 설치는 별도 운영 선택이며 자동 설치하지 않습니다.
 
-Finder 이동·삭제·공유도 OS 메뉴를 눌렀다는 사실만으로 성공 처리하지 않습니다. 원본·목적지·실제 파일 동일성·공유 대상과 결과를 검증해야 합니다. 외부 공유는 정확한 수신자·파일·채널을 승인 카드에 표시하고 전송 영수증 또는 provider idempotency를 확인할 때만 구현합니다.
+실제 외부 공유는 정확한 수신자·파일·채널을 승인 카드에 표시하고 전송 영수증과 provider idempotency를 검증할 때 추가합니다. 지금은 로컬 preview만 있습니다.
 
 ## 2. 한 Mac의 실용 업무 흐름
 

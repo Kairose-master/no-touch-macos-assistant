@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "date": "2026-11-18",
+  "model": "eve chatgpt() / ChatGPT subscription real model",
+  "scriptedModel": false,
+  "mode": "live",
+  "request": "회의 메모 만들고, 내일 오후 3시 서울 알림 추가하고, 최근 파일 보여줘",
+  "planApprovalBeforeAnyWrite": true,
+  "nativeThreeAppWebE2E": true,
+  "continuousActivationObservation": true,
+  "cursorSampleIntervalMs": 25,
+  "trials": [
+    {
+      "trial": 1,
+      "passed": true,
+      "noteCreatedOnce": true,
+      "reminderDateTimeZoneAlarmReadback": true,
+      "serverResolvedTomorrow": true,
+      "renderedNativeResults": true,
+      "activationBundles": [],
+      "cursorSampleIntervalMs": 25,
+      "cursorUnchangedThroughout": true,
+      "focusActivationEvents": 0,
+      "focusUnchangedThroughout": true,
+      "ready": false
+    }
+  ],
+  "pageErrors": []
+}

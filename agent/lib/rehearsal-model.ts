@@ -6,7 +6,7 @@ function next(options: LanguageModelV4CallOptions) {
   const userText = options.prompt.filter(message => message.role === 'user').map(message => JSON.stringify(message.content)).join(' ');
   const action = /공유|share/i.test(userText) ? 'share' : /삭제|trash|delete/i.test(userText) ? 'trash' : 'move';
   if (!has('write_note')) return { name: 'write_note', input: { title: 'NoTouch Demo 회의', body: '샘플 회의 메모: 다음 데모를 준비한다.' } };
-  if (!has('add_reminder')) return { name: 'add_reminder', input: { title: 'NoTouch Demo 준비', dueAt: '2026-11-19T15:00:00+09:00', timeZone: 'Asia/Seoul' } };
+  if (!has('add_reminder')) return { name: 'add_reminder', input: { title: 'NoTouch Demo 준비', dueAt: process.env.NO_TOUCH_DEMO_DUE_AT ?? '2026-11-19T15:00:00+09:00', timeZone: 'Asia/Seoul' } };
   if (!has('latest_files')) return { name: 'latest_files', input: {} };
   if (!has('change_file')) {
     const output = results.find(result => result.toolName === 'latest_files')?.output;
@@ -21,7 +21,7 @@ export const rehearsalModel: LanguageModelV4 = {
   specificationVersion: 'v4', provider: 'no-touch-rehearsal', modelId: 'scripted-fixture', supportedUrls: {},
   async doGenerate(options) {
     const step = next(options);
-    return { content: step ? [{ type: 'tool-call', toolCallId: crypto.randomUUID(), toolName: step.name, input: JSON.stringify(step.input) }] : [{ type: 'text', text: '샘플 리허설을 마쳤습니다. 각 카드의 완료·거절 결과를 확인하세요. 실제 macOS 앱과 외부 공유는 실행하지 않았습니다.' }], finishReason: { unified: step ? 'tool-calls' : 'stop', raw: undefined }, usage, warnings: [] };
+    return { content: step ? [{ type: 'tool-call', toolCallId: crypto.randomUUID(), toolName: step.name, input: JSON.stringify(step.input) }] : [{ type: 'text', text: process.env.NO_TOUCH_MODE === 'live' ? '고정 시나리오 실행을 마쳤습니다. 실제 Mac 작업의 성공·실패는 각 카드에서 확인하세요. 파일은 전용 샘플 폴더로 제한되며 외부 공유는 실행하지 않습니다.' : '샘플 리허설을 마쳤습니다. 각 카드의 완료·거절 결과를 확인하세요. 실제 macOS 앱과 외부 공유는 실행하지 않았습니다.' }], finishReason: { unified: step ? 'tool-calls' : 'stop', raw: undefined }, usage, warnings: [] };
   },
   async doStream(options) {
     const result = await this.doGenerate(options);

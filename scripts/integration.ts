@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdir, lstat, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, lstat, readFile, writeFile, cp, symlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { once as eventOnce } from 'node:events';
 import { Client } from 'eve/client';
@@ -10,13 +10,19 @@ import { seed } from './seed.ts';
 // A test must not leave the default demo root nonempty and unmarked before its first seed.
 const root = resolve(`.demo-integration-${crypto.randomUUID()}`);
 await seed(root);
+// Retained sessions belong to their app/world. Never resume live user runs with a fixture data root.
+const workspace = join(root, 'workspace');
+await mkdir(workspace);
+for (const directory of ['agent', 'scripts']) await cp(resolve(directory), join(workspace, directory), { recursive: true });
+for (const file of ['package.json', 'tsconfig.json']) await cp(resolve(file), join(workspace, file));
+await symlink(resolve('node_modules'), join(workspace, 'node_modules'), 'dir');
 const port = 2100; const baseUrl = `http://127.0.0.1:${port}`;
 const client = new Client({ baseUrl });
 let server: ChildProcess | undefined; let logs = '';
 async function start() {
   logs = '';
   server = spawn(resolve('node_modules/.bin/eve'), ['dev','--no-ui','--resume','--no-default-extensions','--host','127.0.0.1','--port',String(port)], {
-    env: { ...process.env, NO_TOUCH_MODE:'fixture', NO_TOUCH_MODEL:'rehearsal', NO_TOUCH_DATA_DIR:root, EVE_TELEMETRY_DISABLED:'1' }, stdio:['ignore','pipe','pipe'],
+    cwd: workspace, env: { ...process.env, NO_TOUCH_MODE:'fixture', NO_TOUCH_MODEL:'rehearsal', NO_TOUCH_DATA_DIR:root, EVE_TELEMETRY_DISABLED:'1' }, stdio:['ignore','pipe','pipe'],
   });
   server.stdout!.on('data', data => { logs += String(data); }); server.stderr!.on('data', data => { logs += String(data); });
   const until = Date.now() + 35000;

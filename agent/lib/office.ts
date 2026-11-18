@@ -20,15 +20,18 @@ const s = {
   reminderDue: { role: 'text field', name: 'Due' }, reminderSave: { role: 'button', name: 'Add Reminder' },
 };
 function desktop() {
-  // Real native app recipes need an authorized isolated rehearsal. Never claim fixture selectors are macOS selectors.
-  if ((process.env.NO_TOUCH_MODE ?? 'fixture') !== 'fixture') throw new Error('LIVE_RECIPES_UNVERIFIED: native app creation and Finder mutations are disabled; the CLI transport is available for an authorized integration.');
+  // Fixture selectors are never reused as native selectors. Live dispatch occurs in the capabilities below.
+  if ((process.env.NO_TOUCH_MODE ?? 'fixture') !== 'fixture') throw new Error('UNSUPPORTED_MODE: choose fixture or explicitly configured live mode.');
   return new Desktop(new FixtureTransport(), windows);
 }
 const fieldEquals = (selector: Selector, value: string) => (snapshot: Snapshot) => unique(snapshot, selector).value === value;
 const inDemo = (snapshot: Snapshot) => snapshot.tree.name === 'NoTouch Demo';
+const live = () => process.env.NO_TOUCH_MODE === 'live';
+const operationKind = (kind: string) => `${live() ? 'live' : 'fixture'}:${kind}`;
 
 export async function writeNote(scope: string, input: NoteInput) {
-  return measured('write_note', () => once(scope, 'write_note', input, () => withAppLock(async () => {
+  return measured('write_note', () => once(scope, operationKind('write_note'), input, () => withAppLock(async () => {
+    if (live()) { const { nativeWriteNote } = await import('./native-notes.ts'); return nativeWriteNote(input); }
     const d = desktop(); const content = `${input.title}\n${input.body}`;
     await d.act('notes', s.noteNew, 'click', fieldEquals(s.noteBody, ''), undefined, inDemo);
     await d.act('notes', s.noteBody, 'set-value', fieldEquals(s.noteBody, content), content, fieldEquals(s.noteBody, ''));
@@ -37,7 +40,8 @@ export async function writeNote(scope: string, input: NoteInput) {
 }
 export async function addReminder(scope: string, input: ReminderInput) {
   new Intl.DateTimeFormat('en', { timeZone: input.timeZone }).format();
-  return measured('add_reminder', () => once(scope, 'add_reminder', input, () => withAppLock(async () => {
+  return measured('add_reminder', () => once(scope, operationKind('add_reminder'), input, () => withAppLock(async () => {
+    if (live()) { const { nativeAddReminder } = await import('./native-office.ts'); return nativeAddReminder(scope, input); }
     const d = desktop();
     await d.act('reminders', s.reminderNew, 'click', fieldEquals(s.reminderTitle, ''), undefined, inDemo);
     await d.act('reminders', s.reminderTitle, 'type', fieldEquals(s.reminderTitle, input.title), input.title, fieldEquals(s.reminderTitle, ''));
@@ -62,7 +66,8 @@ async function fileCard(name: string) {
 }
 export async function latestFiles() {
   return measured('latest_files', () => withAppLock(async () => {
-    const snapshot = await desktop().snapshot('finder'); if (!inDemo(snapshot)) throw new Error('DEMO_WINDOW_REQUIRED');
+    const snapshot = live() ? await (await import('./native-office.ts')).nativeFinderSnapshot() : await desktop().snapshot('finder');
+    if (!live() && !inDemo(snapshot)) throw new Error('DEMO_WINDOW_REQUIRED');
     const root = await filesRoot(); const cards = [];
     for (const file of await readdir(root, { withFileTypes: true })) {
       if (!file.isFile() || file.name.startsWith('.')) continue;
@@ -70,12 +75,13 @@ export async function latestFiles() {
       if (flatten(snapshot.tree).some(node => node.name === card.name)) cards.push(card);
     }
     cards.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt) || a.name.localeCompare(b.name));
-    return { kind: 'files', mode: 'fixture', bundleId: bundles.finder, cards: cards.slice(0, 5) };
+    return { kind: 'files', mode: live() ? 'live' : 'fixture', bundleId: bundles.finder, cards: cards.slice(0, 5) };
   }));
 }
 export async function changeFile(scope: string, input: ChangeInput) {
-  desktop();
-  return measured(`file_${input.action}`, () => once(scope, 'change_file', input, () => withAppLock(async () => {
+  if (live()) await (await import('./native-worker.ts')).nativeProfile(); else desktop();
+  return measured(`file_${input.action}`, () => once(scope, operationKind('change_file'), input, () => withAppLock(async () => {
+    if (live()) await (await import('./native-office.ts')).nativeFinderSnapshot();
     const card = await fileCard(input.name);
     if (card.fingerprint !== input.fingerprint) throw new Error('FILE_CHANGED: request a fresh card and a new approval.');
     const dir = join(await filesRoot(), input.action === 'share' ? '.share-preview' : input.destination);
@@ -88,6 +94,7 @@ export async function changeFile(scope: string, input: ChangeInput) {
     else await rename(card.path, destination);
     if (!(await lstat(destination)).isFile()) throw new Error('UNVERIFIED_RESULT');
     if (input.action !== 'share') { try { await lstat(card.path); throw new Error('SOURCE_STILL_PRESENT'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; } }
-    return { kind: 'file-change', action: input.action, name: input.name, destination: input.destination, verified: true, mode: 'fixture', externalDelivery: false };
+    if (live() && input.action !== 'share') await (await import('./native-office.ts')).verifyFinderAbsent(input.name);
+    return { kind: 'file-change', action: input.action, name: input.name, destination: input.destination, verified: true, mode: live() ? 'live' : 'fixture', transport: 'scoped-filesystem', externalDelivery: false };
   })));
 }

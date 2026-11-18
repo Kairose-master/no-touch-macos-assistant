@@ -16,7 +16,8 @@ export const changeInput = z.object({
 export type NoteInput = z.infer<typeof noteInput>;
 export type ReminderInput = z.infer<typeof reminderInput>;
 export type ChangeInput = z.infer<typeof changeInput>;
-export const allowedTools = ['write_note', 'add_reminder', 'latest_files', 'change_file'] as const;
+export const allowedTools = ['write_note', 'add_reminder', 'latest_files', 'change_file', 'office_work', 'work_history'] as const;
 export function toolPolicy(name: string) {
-  return (allowedTools as readonly string[]).includes(name) ? undefined : { type: 'denied' as const, reason: 'Only four scoped office capabilities are authorized.' };
+  if (process.env.NO_TOUCH_MODEL !== 'rehearsal' && ['write_note','add_reminder','latest_files','change_file'].includes(name)) return {type:'denied' as const,reason:'Use office_work: real model requests require a reviewed plan and exact file approvals.'};
+  return (allowedTools as readonly string[]).includes(name) ? undefined : { type: 'denied' as const, reason: 'Only reviewed office workflows and scoped capabilities are authorized.' };
 }
