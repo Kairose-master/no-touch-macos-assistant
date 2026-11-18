@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "browser": "isolated headless Chromium",
+  "userBrowserTouched": false,
+  "renderedCards": true,
+  "approvalSurvivesReload": true,
+  "denialHasNoEffect": true,
+  "explicitApprovalExecutes": true,
+  "crossOriginBlocked": true,
+  "pageErrors": [],
+  "apiPaths": [
+    "/eve/v1/session",
+    "/eve/v1/session/:session/stream",
+    "/eve/v1/session/:session"
+  ],
+  "nativeMacOSE2E": false
+}

@@ -1,0 +1,38 @@
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "status",
+  "data": {
+    "permissions": {
+      "accessibility": {
+        "state": "denied",
+        "suggestion": "Run agent-desktop permissions --guide. It opens System Settings > Privacy & Security > Accessibility (Device Control and Data Access on macOS 27 and later) with a guide that shows which app to drag into the list: the app that launches agent-desktop, such as Terminal, iTerm, or Codex. If macOS lists the built binary separately, add that binary too."
+      },
+      "automation": {
+        "state": "unknown"
+      },
+      "screen_recording": {
+        "state": "denied",
+        "suggestion": "Run agent-desktop permissions --guide. It opens System Settings > Privacy & Security > Screen Recording with a guide that shows which app to drag into the list: the app that launches agent-desktop, such as Terminal, iTerm, or Codex. If macOS lists the built binary separately, add that binary too."
+      }
+    },
+    "platform": "macos",
+    "ref_count": null,
+    "session_id": null,
+    "snapshot_id": null,
+    "state_root": "<redacted local state directory>",
+    "supported_surfaces": [
+      "window",
+      "focused",
+      "menu",
+      "menubar",
+      "sheet",
+      "popover",
+      "alert",
+      "dock",
+      "menu-bar-extras"
+    ],
+    "tracing": false,
+    "version": "1.3.1"
+  }
+}

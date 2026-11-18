@@ -1,0 +1,58 @@
+{
+  "name": "no-touch-assistant",
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#*": "./agent/*",
+    "#evals/*": "./evals/*"
+  },
+  "scripts": {
+    "build": "eve build",
+    "deploy": "eve deploy",
+    "dev": "eve dev --no-ui --resume --no-default-extensions --host 127.0.0.1",
+    "eval": "eve eval",
+    "start": "eve start",
+    "typecheck": "tsc",
+    "dev:web": "next dev apps/web --hostname 127.0.0.1 --port 3000",
+    "build:web": "next build apps/web",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "demo:seed": "node --experimental-strip-types scripts/seed.ts",
+    "demo": "node scripts/run-demo.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "typecheck:web": "tsc -p apps/web/tsconfig.json --noEmit",
+    "test:integration": "node --experimental-strip-types scripts/integration.ts",
+    "test:browser": "node --experimental-strip-types scripts/browser-test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/provider": "4.0.39",
+    "@opentelemetry/api": "1.10.0",
+    "@tailwindcss/postcss": "4.3.0",
+    "@vercel/connect": "2.9.4",
+    "agent-desktop": "1.3.1",
+    "ai": "7.0.176",
+    "eve": "1.0.2",
+    "just-bash": "3.6.1",
+    "next": "16.4.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "tailwindcss": "4.3.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "private": true,
+  "description": "Local eve office assistant rehearsal with durable per-action approvals and a headless desktop adapter.",
+  "overrides": {
+    "guarded-fetch": {
+      "undici": "7.30.1"
+    }
+  }
+}

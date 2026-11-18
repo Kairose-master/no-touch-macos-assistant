@@ -1,0 +1,16 @@
+{
+  "eve": "1.0.2",
+  "traceSchema": 4,
+  "spansObserved": 16,
+  "spanNames": [
+    "invoke_agent no-touch-assistant",
+    "agent.step",
+    "chat scripted-fixture",
+    "execute_tool write_note",
+    "execute_tool add_reminder",
+    "execute_tool latest_files",
+    "execute_tool change_file",
+    "agent.approval"
+  ],
+  "contentCaptureDisabled": true
+}

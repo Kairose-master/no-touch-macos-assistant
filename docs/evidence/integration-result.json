@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "eve": "1.0.2",
+  "mode": "fixture",
+  "approvalBeforeEffect": true,
+  "restartResume": true,
+  "exactInteractionRestored": true,
+  "approvalResponseDeduplicated": true,
+  "creationNotRepeatedAfterRestart": true,
+  "denialHasNoFileEffect": true,
+  "approvedMove": true,
+  "approvedReversibleTrash": true,
+  "shareIsLocalPreview": true,
+  "nativeMacOSE2E": false
+}

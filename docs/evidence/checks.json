@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-18",
+  "node": "v24.18.0",
+  "eve": "1.0.2",
+  "agentDesktop": "1.3.1",
+  "next": "16.4.6",
+  "unitTests": {
+    "passed": 7,
+    "failed": 0
+  },
+  "backendTypecheck": true,
+  "webTypecheck": true,
+  "eveBuild": true,
+  "nextProductionBuild": true,
+  "finalSandboxIntegration": true,
+  "browserFixtureE2E": true,
+  "npmAuditVulnerabilities": 0,
+  "nativeMacOSE2E": false,
+  "externalSharingImplemented": false
+}

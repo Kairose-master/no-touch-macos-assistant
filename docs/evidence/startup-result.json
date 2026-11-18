@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "script": "npm run demo",
+  "backendHealth": true,
+  "webRendered": true,
+  "nativeAppControl": false,
+  "automaticBrowserOpening": false
+}
