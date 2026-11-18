@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-18",
+  "baseCommit": "edf18c3bee170b801aaaca783db109a08078746b",
+  "freshPublicClone": true,
+  "npmCiFromProjectDirectory": true,
+  "unitTestsPassed": 7,
+  "backendTypecheck": true,
+  "webTypecheck": true,
+  "eveBuild": true,
+  "nextProductionBuild": true,
+  "durableApprovalIntegration": true,
+  "browserFixtureE2E": true,
+  "browserPageErrors": 0,
+  "npmAuditVulnerabilities": 0,
+  "regressions": {
+    "passed": true,
+    "defaultDemoStartsAfterIntegration": true,
+    "customDataDirectoryBrowserE2E": true,
+    "logsInSelectedDataDirectory": true,
+    "defaultSampleUntouchedByCustomRun": true,
+    "nativeMacOSE2E": false
+  },
+  "fixes": [
+    "Integration fixtures use a sibling .demo-integration-* directory.",
+    "Demo logs and browser assertions honor NO_TOUCH_DATA_DIR."
+  ],
+  "accessibility": "denied",
+  "nativeMacOSE2E": false,
+  "externalSharingImplemented": false
+}

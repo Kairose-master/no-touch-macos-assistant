@@ -69,13 +69,16 @@ npm run build:web
 npm audit
 ```
 
-`test:integration`은 포트 2100에 샘플 서버를 띄워 재시작·승인·거절을 검사하고 종료합니다. 실제 앱이나 외부 모델은 사용하지 않습니다. 포트가 비어 있어야 합니다.
+`test:integration`은 포트 2100에 샘플 서버를 띄워 재시작·승인·거절을 검사하고 종료합니다. 데이터는 별도의 `.demo-integration-*`에 기록하므로 기본 `.demo`를 초기화하기 전에도 실행할 수 있습니다. 실제 앱이나 외부 모델은 사용하지 않습니다. 포트가 비어 있어야 합니다.
 
 브라우저 검증은 **새 빈 샘플 디렉터리**로 실행한 `npm run demo`가 준비된 상태에서 별도 터미널로 수행합니다. 이미 이동한 파일이 있는 디렉터리로 반복 실행하면 예제 전제조건이 달라집니다.
 
 ```sh
+# 서버 터미널: 매번 새 빈 경로를 사용합니다.
+NO_TOUCH_DATA_DIR="$PWD/.demo-browser-1" npm run demo
+# 테스트 터미널: 서버와 동일한 경로를 지정합니다.
 PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-browsers npx playwright install chromium
-PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-browsers npm run test:browser
+NO_TOUCH_DATA_DIR="$PWD/.demo-browser-1" PLAYWRIGHT_BROWSERS_PATH=/tmp/no-touch-browsers npm run test:browser
 ```
 
 브라우저 테스트는 사용자 브라우저와 분리된 headless Chromium을 사용합니다. 결과와 샘플 화면은 [docs/evidence](docs/evidence)에 있습니다. 실제 앱 스크린샷이 아닙니다.

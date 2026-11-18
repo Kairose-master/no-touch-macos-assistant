@@ -1,6 +1,9 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile, lstat } from 'node:fs/promises';
+import { join } from 'node:path';
+import { dataRoot } from '../agent/lib/storage.ts';
+const root = dataRoot();
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 1000 }, locale: 'ko-KR', timezoneId: 'Asia/Seoul' });
 const errors: string[] = []; const apiPaths = new Set<string>();
@@ -14,24 +17,24 @@ try {
   await approval.waitFor({ timeout: 30000 });
   await page.getByText('budget-sample.csv', { exact: true }).waitFor();
   assert.match(await page.locator('.nt-approval').innerText(), /fingerprint [a-f0-9]{64}/);
-  await lstat('.demo/files/budget-sample.csv');
+  await lstat(join(root, 'files', 'budget-sample.csv'));
   await page.reload(); await approval.waitFor({ timeout: 20000 });
   await mkdir('docs/evidence', { recursive: true });
   await page.screenshot({ path: 'docs/evidence/web-approval.png', fullPage: true });
   await page.getByRole('button', { name: '거절', exact: true }).click();
   await page.getByText('rejected', { exact: true }).waitFor({ timeout: 20000 });
-  await lstat('.demo/files/budget-sample.csv');
+  await lstat(join(root, 'files', 'budget-sample.csv'));
   await page.goto('http://127.0.0.1:3000');
   await page.getByRole('button', { name: /2분 데모 예제/ }).click();
   await page.getByRole('button', { name: '요청 보내기' }).click();
   await approval.waitFor({ timeout: 30000 }); await approval.click();
   await page.getByText(/budget-sample.csv → Archive · 샘플/).waitFor({ timeout: 20000 });
-  await lstat('.demo/files/Archive/budget-sample.csv');
-  await assert.rejects(lstat('.demo/files/budget-sample.csv'), { code: 'ENOENT' });
+  await lstat(join(root, 'files', 'Archive', 'budget-sample.csv'));
+  await assert.rejects(lstat(join(root, 'files', 'budget-sample.csv')), { code: 'ENOENT' });
   await page.screenshot({ path: 'docs/evidence/web-completed.png', fullPage: true });
-  const state = JSON.parse(await readFile('.demo/apps.json', 'utf8')); assert.ok(state.notes.length >= 2 && state.reminders.length >= 2);
+  const state = JSON.parse(await readFile(join(root, 'apps.json'), 'utf8')); assert.ok(state.notes.length >= 2 && state.reminders.length >= 2);
   const cross = await fetch('http://127.0.0.1:3000/eve/v1/session', { method: 'POST', headers: { origin: 'https://untrusted.example' } }); assert.equal(cross.status, 403);
   assert.deepEqual(errors, []);
   const report = { passed: true, browser: 'isolated headless Chromium', userBrowserTouched: false, renderedCards: true, approvalSurvivesReload: true, denialHasNoEffect: true, explicitApprovalExecutes: true, crossOriginBlocked: true, pageErrors: errors, apiPaths: [...apiPaths], nativeMacOSE2E: false };
   await writeFile('docs/evidence/browser-result.json', JSON.stringify(report, null, 2)+'\n'); console.log(JSON.stringify(report, null, 2));
-} catch (error) { console.error(JSON.stringify({errors,apiPaths:[...apiPaths],body:await page.locator("body").innerText()})); await page.screenshot({path:".demo/browser-failure.png",fullPage:true}); throw error; } finally { await browser.close(); }
+} catch (error) { console.error(JSON.stringify({errors,apiPaths:[...apiPaths],body:await page.locator("body").innerText()})); await page.screenshot({path:join(root, 'browser-failure.png'),fullPage:true}); throw error; } finally { await browser.close(); }

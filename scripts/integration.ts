@@ -7,7 +7,8 @@ import { Client } from 'eve/client';
 import { emptySessionView, foldEvents, openInteractions } from 'eve/events';
 import { seed } from './seed.ts';
 
-const root = resolve('.demo', `integration-${crypto.randomUUID()}`);
+// A test must not leave the default demo root nonempty and unmarked before its first seed.
+const root = resolve(`.demo-integration-${crypto.randomUUID()}`);
 await seed(root);
 const port = 2100; const baseUrl = `http://127.0.0.1:${port}`;
 const client = new Client({ baseUrl });
